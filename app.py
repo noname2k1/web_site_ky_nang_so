@@ -100,24 +100,34 @@ def api_submit():
         )
 
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    row_id = insert_result(
-        {
-            "submitTime": now,
-            "name": name,
-            "department": department,
-            "questionCount": question_count,
-            "configuredMinutes": configured_minutes,
-            "remainingSeconds": remaining_seconds,
-            "submitType": "Hết giờ" if auto_submit else "Tự nộp",
-            "answeredCount": answered_count,
-            "correctCount": correct_count,
-            "wrongCount": wrong_count,
-            "percentage": percentage,
-            "details": safe_details,
-        }
-    )
+    try:
+        row_id = insert_result(
+            {
+                "submitTime": now,
+                "name": name,
+                "department": department,
+                "questionCount": question_count,
+                "configuredMinutes": configured_minutes,
+                "remainingSeconds": remaining_seconds,
+                "submitType": "Hết giờ" if auto_submit else "Tự nộp",
+                "answeredCount": answered_count,
+                "correctCount": correct_count,
+                "wrongCount": wrong_count,
+                "percentage": percentage,
+                "details": safe_details,
+            }
+        )
 
-    return jsonify(success=True, id=row_id, message="Đã lưu kết quả.")
+        return jsonify(success=True, id=row_id, message="Đã lưu kết quả.")
+
+    except Exception as e:
+        import traceback
+
+        print("========== SQLITE ERROR ==========")
+        traceback.print_exc()
+        print("==================================")
+
+        return jsonify(success=False, message=f"{type(e).__name__}: {e}"), 500
 
 
 @app.get("/api/results")
@@ -248,4 +258,4 @@ if __name__ == "__main__":
     print("Trang thi : http://127.0.0.1:5000")
     print("Quan ly   : http://127.0.0.1:5000/admin")
     print("=" * 60)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
