@@ -153,22 +153,12 @@ def departments():
 
 def statistics():
     with get_connection() as conn:
-        rows = conn.execute("""
-            SELECT percentage
+        row = conn.execute("""
+            SELECT
+                COUNT(*) AS total,
+                COALESCE(SUM(CASE WHEN percentage >= 50 THEN 1 ELSE 0 END), 0) AS passed,
+                COALESCE(SUM(CASE WHEN percentage < 50 THEN 1 ELSE 0 END), 0) AS failed,
+                COALESCE(AVG(percentage), 0) AS average
             FROM results
-        """).fetchall()
-
-    total = len(rows)
-    passed = sum(1 for row in rows if float(row["percentage"] or 0) >= 50)
-    failed = total - passed
-
-    average = (
-        sum(float(row["percentage"] or 0) for row in rows) / total if total > 0 else 0
-    )
-
-    return {
-        "total": total,
-        "passed": passed,
-        "failed": failed,
-        "average": round(average, 2),
-    }
+        """).fetchone()
+        return dict(row)
