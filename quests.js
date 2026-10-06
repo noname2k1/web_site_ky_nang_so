@@ -6151,7 +6151,8 @@ let quiz = [],
   current = 0,
   remaining = 0,
   timerId = null,
-  submitted = false;
+  submitted = false,
+  debug = true;
 
 document.getElementById("startBtn").addEventListener("click", function () {
   if (!validateForm()) {
@@ -6291,25 +6292,78 @@ function nextQ() {
     render();
   }
 }
-function submitQuiz(auto = false) {
+async function submitQuiz(auto = false) {
   if (submitted) return;
   if (!auto && !confirm("Bạn chắc chắn muốn nộp bài?")) return;
+
   submitted = true;
   if (timerId) clearInterval(timerId);
+
   const score = answers.reduce(
-    (s, a, i) => s + (a === quiz[i].answer ? 1 : 0),
+    (sum, answer, i) => sum + (answer === quiz[i].answer ? 1 : 0),
     0,
   );
-  const pct = Math.round((score / quiz.length) * 100);
+  const answeredCount = answers.filter((answer) => answer !== null).length;
+  const wrongCount = quiz.length - score;
+  const pct = quiz.length ? Math.round((score / quiz.length) * 100) : 0;
+  const configuredMinutes =
+    Number(document.getElementById("minutes").value) || 0;
+  const countValue = document.getElementById("count").value;
+
+  const details = quiz.map((q, i) => ({
+    number: i + 1,
+    questionId: q.id,
+    question: q.q,
+    selected: answers[i],
+    selectedLabel: answers[i] === null ? "Chưa chọn" : "ABCDE"[answers[i]],
+    correct: q.answer,
+    correctLabel: "ABCDE"[q.answer],
+    correctText: q.options[q.answer],
+    isCorrect: answers[i] === q.answer,
+  }));
+
+  // Lưu lên Python/SQLite. Chạy hoàn toàn offline trên máy.
+  let saveMessage = "";
+  try {
+    const response = await fetch("/api/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: document.getElementById("name").value.trim(),
+        department: document.getElementById("department").value.trim(),
+        questionCount: quiz.length,
+        countValue,
+        configuredMinutes,
+        remainingSeconds: Math.max(0, remaining),
+        autoSubmit: auto,
+        answeredCount,
+        correctCount: score,
+        wrongCount,
+        percentage: pct,
+        details,
+      }),
+    });
+    console.log("Response from server:", response);
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "Không lưu được kết quả.");
+    }
+    saveMessage = `<p class="save-success">✓ Đã lưu kết quả.</p>`;
+  } catch (error) {
+    console.error("Lỗi lưu kết quả:", error);
+    saveMessage = `<p class="save-error">⚠ Không lưu được vào hệ thống: ${escapeHtml(error.message)}</p>`;
+  }
+
   document.getElementById("quiz").classList.add("hidden");
   document.getElementById("result").classList.remove("hidden");
   document.getElementById("score").textContent =
     `${score}/${quiz.length} (${pct}%)`;
   document.getElementById("resultName").textContent =
-    `Thí sinh: ${document.getElementById("name").value || "Chưa nhập tên"}
-    ${document.getElementById("department").value ? ` • ${document.getElementById("department").value}` : ""}${auto ? " • Hết giờ" : ""}`;
+    `Thí sinh: ${document.getElementById("name").value || "Chưa nhập tên"}` +
+    `${document.getElementById("department").value ? ` • ${document.getElementById("department").value}` : ""}` +
+    `${auto ? " • Hết giờ" : ""}`;
   document.getElementById("resultDetail").innerHTML =
-    `<p>Đúng <b>${score}</b> câu • Sai/không trả lời <b>${quiz.length - score}</b> câu.</p>`;
+    `<p>Đúng <b>${score}</b> câu • Sai/không trả lời <b>${quiz.length - score}</b> câu.</p>${saveMessage}`;
   document.getElementById("review").innerHTML = "";
 }
 function review() {
@@ -6475,92 +6529,94 @@ document.getElementById("department").addEventListener("blur", function () {
   validateDepartment();
 });
 
-// ============================================================
-// PHÁT HIỆN DEVTOOLS
-// ============================================================
+if (!debug) {
+  // ============================================================
+  // PHÁT HIỆN DEVTOOLS
+  // ============================================================
 
-let devToolsDetected = false;
+  let devToolsDetected = false;
 
-function handleDevToolsDetected() {
-  if (devToolsDetected) return;
+  function handleDevToolsDetected() {
+    if (devToolsDetected) return;
 
-  devToolsDetected = true;
+    devToolsDetected = true;
 
-  // Dừng timer nếu đang thi
-  if (typeof timerInterval !== "undefined" && timerInterval) {
-    clearInterval(timerInterval);
+    // Dừng timer nếu đang thi
+    if (typeof timerInterval !== "undefined" && timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    // Nếu đang thi thì khóa màn hình
+    const quiz = document.getElementById("quiz");
+    const setup = document.getElementById("setup");
+    const result = document.getElementById("result");
+
+    if (quiz) {
+      quiz.classList.add("hidden");
+    }
+
+    if (result) {
+      result.classList.add("hidden");
+    }
+
+    if (setup) {
+      setup.classList.remove("hidden");
+    }
+
+    alert(
+      "Phát hiện công cụ kiểm tra phần tử (DevTools).\n\n" +
+        "Bài thi đã bị dừng.",
+    );
+    window.location.reload();
   }
 
-  // Nếu đang thi thì khóa màn hình
-  const quiz = document.getElementById("quiz");
-  const setup = document.getElementById("setup");
-  const result = document.getElementById("result");
+  // Kiểm tra kích thước cửa sổ
+  function checkDevTools() {
+    const threshold = 160;
 
-  if (quiz) {
-    quiz.classList.add("hidden");
+    const widthDiff = window.outerWidth - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+
+    if (widthDiff > threshold || heightDiff > threshold) {
+      handleDevToolsDetected();
+    }
   }
 
-  if (result) {
-    result.classList.add("hidden");
-  }
+  // Kiểm tra định kỳ
+  setInterval(checkDevTools, 1000);
 
-  if (setup) {
-    setup.classList.remove("hidden");
-  }
+  window.addEventListener("resize", checkDevTools);
 
-  alert(
-    "Phát hiện công cụ kiểm tra phần tử (DevTools).\n\n" +
-      "Bài thi đã bị dừng.",
-  );
-  window.location.reload();
+  // Chặn phím tắt DevTools
+  document.addEventListener("keydown", function (e) {
+    const key = e.key?.toLowerCase();
+
+    // F12
+    if (e.key === "F12") {
+      e.preventDefault();
+      handleDevToolsDetected();
+      return;
+    }
+
+    // Ctrl + Shift + I
+    if (e.ctrlKey && e.shiftKey && key === "i") {
+      e.preventDefault();
+      handleDevToolsDetected();
+      return;
+    }
+
+    // Ctrl + Shift + J
+    if (e.ctrlKey && e.shiftKey && key === "j") {
+      e.preventDefault();
+      handleDevToolsDetected();
+      return;
+    }
+
+    // Ctrl + U
+    if (e.ctrlKey && key === "u") {
+      e.preventDefault();
+      handleDevToolsDetected();
+      return;
+    }
+  });
 }
-
-// Kiểm tra kích thước cửa sổ
-function checkDevTools() {
-  const threshold = 160;
-
-  const widthDiff = window.outerWidth - window.innerWidth;
-  const heightDiff = window.outerHeight - window.innerHeight;
-
-  if (widthDiff > threshold || heightDiff > threshold) {
-    handleDevToolsDetected();
-  }
-}
-
-// Kiểm tra định kỳ
-setInterval(checkDevTools, 1000);
-
-window.addEventListener("resize", checkDevTools);
-
-// Chặn phím tắt DevTools
-document.addEventListener("keydown", function (e) {
-  const key = e.key?.toLowerCase();
-
-  // F12
-  if (e.key === "F12") {
-    e.preventDefault();
-    handleDevToolsDetected();
-    return;
-  }
-
-  // Ctrl + Shift + I
-  if (e.ctrlKey && e.shiftKey && key === "i") {
-    e.preventDefault();
-    handleDevToolsDetected();
-    return;
-  }
-
-  // Ctrl + Shift + J
-  if (e.ctrlKey && e.shiftKey && key === "j") {
-    e.preventDefault();
-    handleDevToolsDetected();
-    return;
-  }
-
-  // Ctrl + U
-  if (e.ctrlKey && key === "u") {
-    e.preventDefault();
-    handleDevToolsDetected();
-    return;
-  }
-});

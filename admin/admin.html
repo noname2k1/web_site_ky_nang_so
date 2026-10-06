@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Quản lý kết quả thi</title>
+    <link rel="stylesheet" href="/admin/admin.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <div>
+          <h1>Quản lý kết quả thi</h1>
+          <p>Hệ thống thi trắc nghiệm offline</p>
+        </div>
+        <a class="back" href="/">← Trang thi</a>
+      </header>
+
+      <section class="stats">
+        <div><span>Tổng số</span><b id="total">0</b></div>
+        <div><span>Đạt</span><b id="passed">0</b></div>
+        <div><span>Không đạt</span><b id="failed">0</b></div>
+        <div><span>Điểm TB</span><b id="average">0%</b></div>
+      </section>
+
+      <section class="panel filters">
+        <input id="search" placeholder="Tìm họ tên hoặc phòng ban..." />
+        <select id="department">
+          <option value="">Tất cả phòng ban</option>
+        </select>
+        <button id="searchBtn">Tìm kiếm</button>
+        <button id="refreshBtn" class="secondary">Làm mới</button>
+        <button id="exportBtn" class="success">Xuất Excel</button>
+        <button id="deleteManyBtn" class="danger">Xóa đã chọn</button>
+      </section>
+
+      <section class="panel table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll" /></th>
+              <th>STT</th>
+              <th>Thời gian</th>
+              <th>Họ tên</th>
+              <th>Phòng ban</th>
+              <th>Số câu</th>
+              <th>Đúng</th>
+              <th>Sai/Bỏ</th>
+              <th>Điểm</th>
+              <th>Hình thức</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+        <div id="empty" class="empty hidden">Chưa có kết quả.</div>
+      </section>
+    </main>
+
+    <div id="detailModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2>Chi tiết bài thi</h2>
+          <button id="closeModal">×</button>
+        </div>
+        <div id="detailContent"></div>
+      </div>
+    </div>
+    <script src="/admin/admin.js"></script>
+  </body>
+</html>
