@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Thi trắc nghiệm nhanh - 500 câu</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <div>
+          <h1>THI TRẮC NGHIỆM NHANH</h1>
+          <div class="sub">
+            Ngân hàng 500 câu hỏi • Chuyển đổi số, CNTT, an toàn thông tin
+          </div>
+        </div>
+        <div id="timer" class="timer">--:--</div>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="setup" class="card">
+        <h2 style="margin-top: 0">Thi nhanh</h2>
+        <div class="setup-grid">
+          <div class="form-group">
+            <label for="name">Họ và tên</label>
+            <input
+              id="name"
+              type="text"
+              placeholder="Nhập họ và tên"
+              maxlength="100"
+              autocomplete="name"
+            />
+            <div id="nameError" class="error-message"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="department">Phòng ban</label>
+            <input
+              id="department"
+              type="text"
+              placeholder="Nhập phòng ban"
+              maxlength="100"
+              autocomplete="organization"
+            />
+            <div id="departmentError" class="error-message"></div>
+          </div>
+          <div>
+            <label>Số câu</label
+            ><select id="count">
+              <option value="10">10 câu</option>
+              <option value="20" selected>20 câu</option>
+              <option value="30">30 câu</option>
+              <option value="50">50 câu</option>
+              <option value="100">100 câu</option>
+              <option value="all">500 câu</option>
+            </select>
+          </div>
+          <div>
+            <label>Thời gian</label
+            ><select id="minutes">
+              <option value="5">5 phút</option>
+              <option value="10" selected>10 phút</option>
+              <option value="20">20 phút</option>
+              <option value="30">30 phút</option>
+              <option value="60">60 phút</option>
+              <option value="0">Không giới hạn</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="startBtn">Bắt đầu thi</button>
+        </div>
+        <p class="small">
+          Mỗi đề có thể chọn số câu và thời gian; kết quả chấm ngay trên trình
+          duyệt.
+        </p>
+      </section>
+
+      <section id="quiz" class="hidden">
+        <div class="card">
+          <div class="qhead">
+            <span id="counter"></span><span id="answered"></span>
+          </div>
+          <div class="progress-wrap">
+            <div id="progress" class="progress"></div>
+          </div>
+          <div id="palette" class="palette"></div>
+        </div>
+        <div class="card">
+          <div id="question"></div>
+          <div id="options"></div>
+          <div class="nav">
+            <button class="secondary" id="prevBtn">← Câu trước</button>
+            <div class="actions" style="margin: 0">
+              <button class="secondary" id="nextBtn">Câu tiếp →</button>
+              <button class="primary" id="submitBtn">Nộp bài</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="result" class="card result hidden">
+        <h2>KẾT QUẢ</h2>
+        <div id="resultName" class="small"></div>
+        <div id="score" class="score"></div>
+        <div id="resultDetail"></div>
+        <div class="actions" style="justify-content: center">
+          <button class="primary" id="reviewBtn">Xem đáp án</button>
+          <button class="secondary" id="retryBtn">Thi lại</button>
+        </div>
+        <div id="review"></div>
+      </section>
+    </div>
+
+    <script src="./quests.js"></script>
+  </body>
+</html>
