@@ -1,9 +1,17 @@
 from pathlib import Path
 import sqlite3
 import json
+import os
+import shutil
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_FILE = BASE_DIR / "thi_trac_nghiem.db"
+
+if os.environ.get("VERCEL"):
+    DB_FILE = Path("/tmp/thi_trac_nghiem.db")
+    SOURCE_DB_FILE = BASE_DIR / "thi_trac_nghiem.db"
+else:
+    DB_FILE = BASE_DIR / "thi_trac_nghiem.db"
+    SOURCE_DB_FILE = None
 
 
 def get_connection():
@@ -14,6 +22,10 @@ def get_connection():
 
 
 def init_db():
+    if SOURCE_DB_FILE is not None and not DB_FILE.exists():
+        if SOURCE_DB_FILE.exists():
+            shutil.copy2(SOURCE_DB_FILE, DB_FILE)
+    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
     with get_connection() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS results (

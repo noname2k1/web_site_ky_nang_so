@@ -16,6 +16,10 @@ from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = Path(__file__).resolve().parent
 app = Flask(__name__, static_folder=str(BASE_DIR), static_url_path="")
+try:
+    init_db()
+except Exception as e:
+    print("INIT DATABASE ERROR:", repr(e))
 
 
 def clean_text(value, max_len=200):
@@ -251,11 +255,11 @@ def api_export():
 #     print("=" * 70)
 
 
-if __name__ == "__main__":
-    init_db()
-    print("=" * 60)
-    print("HE THONG THI TRAC NGHIEM - OFFLINE")
-    print("Trang thi : http://127.0.0.1:5000")
-    print("Quan ly   : http://127.0.0.1:5000/admin")
-    print("=" * 60)
-    app.run(host="0.0.0.0", port=5000, debug=False)
+# if __name__ == "__main__":
+#     init_db()
+#     print("=" * 60)
+#     print("HE THONG THI TRAC NGHIEM - OFFLINE")
+#     print("Trang thi : http://127.0.0.1:5000")
+#     print("Quan ly   : http://127.0.0.1:5000/admin")
+#     print("=" * 60)
+#     app.run(host="0.0.0.0", port=5000, debug=False)
